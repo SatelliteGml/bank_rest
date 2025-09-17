@@ -55,7 +55,7 @@
                 <constraints nullable="false" foreignKeyName="fk_card_user"
                              references="users(id)"/>
             </column>
-            <column name="cvv" type="VARCHAR(3)">
+            <column name="cvv" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>

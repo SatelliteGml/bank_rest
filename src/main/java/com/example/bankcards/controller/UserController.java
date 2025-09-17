@@ -38,7 +38,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody User user) {
         UserDto createdUser = userService.createUser(user);
         return ResponseEntity.ok(createdUser);

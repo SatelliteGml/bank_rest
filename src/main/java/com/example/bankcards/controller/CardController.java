@@ -3,7 +3,9 @@ package com.example.bankcards.controller;
 import com.example.bankcards.dto.CardCreateRequest;
 import com.example.bankcards.dto.CardDto;
 import com.example.bankcards.dto.TransferRequest;
+import com.example.bankcards.dto.TransferResponse;
 import com.example.bankcards.entity.enums.CardStatus;
+import com.example.bankcards.security.UserDetailsImpl;
 import com.example.bankcards.service.CardService;
 import com.example.bankcards.service.TransferService;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -47,14 +50,14 @@ public class CardController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
+    @GetMapping("/all-cards")
     public ResponseEntity<List<CardDto>> getAllCards() {
         List<CardDto> cards = cardService.getAllCards();
         return ResponseEntity.ok(cards);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<CardDto> createCard(@Valid @RequestBody CardCreateRequest request) {
         CardDto card = cardService.createCard(request);
         return ResponseEntity.ok(card);
@@ -71,14 +74,22 @@ public class CardController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<Void> transferBetweenMyCards(
-            @AuthenticationPrincipal UserDetails userDetails,
+    public ResponseEntity<TransferResponse> transferBetweenMyCards(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @Valid @RequestBody TransferRequest request) {
 
-        Long userId = 1L;
+        transferService.transferBetweenUserCards(userDetails.getId(), request);
 
-        transferService.transferBetweenUserCards(userId, request);
-        return ResponseEntity.ok().build();
+        TransferResponse response = new TransferResponse(
+                "success",
+                request.getFromCardId(),
+                request.getToCardId(),
+                request.getAmount(),
+                request.getDescription(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

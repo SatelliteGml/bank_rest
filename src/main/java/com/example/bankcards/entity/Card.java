@@ -42,6 +42,6 @@ public class Card {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(name = "cvv", length = 255, nullable = false)
     private String cvv;
 }
