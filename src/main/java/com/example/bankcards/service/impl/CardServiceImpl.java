@@ -1,11 +1,13 @@
 package com.example.bankcards.service.impl;
 
+import com.example.bankcards.dto.BlockCardResponse;
 import com.example.bankcards.dto.CardCreateRequest;
 import com.example.bankcards.dto.CardDto;
 import com.example.bankcards.dto.mapper.CardMapper;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.entity.enums.CardStatus;
+import com.example.bankcards.entity.enums.UserRole;
 import com.example.bankcards.exception.ResourceNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
@@ -15,6 +17,7 @@ import com.example.bankcards.util.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,7 +88,6 @@ public class CardServiceImpl implements CardService {
         String encryptedCardNumber = EncryptionUtil.encrypt(cardNumber);
         String cvv = CardNumberGenerator.generateCVV();
 
-        // Check if card number already exists (extremely unlikely but possible)
         if (cardRepository.existsByEncryptedCardNumber(encryptedCardNumber)) {
             throw new IllegalStateException("Generated card number already exists");
         }
@@ -134,5 +136,86 @@ public class CardServiceImpl implements CardService {
                 cardRepository.save(card);
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public BlockCardResponse blockCard(Long cardId, Long userId) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Card not found with id: " + cardId));
+
+        checkCardPermission(card, userId, "block");
+        validateCardForBlocking(card);
+
+        card.setIsBlocked(true);
+        if (card.getStatus() == CardStatus.ACTIVE) {
+            card.setStatus(CardStatus.BLOCKED);
+        }
+
+        cardRepository.save(card);
+
+        return new BlockCardResponse("The card is successfully blocked");
+    }
+
+
+    @Override
+    @Transactional
+    public BlockCardResponse unblockCard(Long cardId, Long userId) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Card not found with id: " + cardId));
+
+        checkCardPermission(card, userId, "unblock");
+        validateCardForUnblocking(card);
+
+        card.setIsBlocked(false);
+        if (isCardNotExpired(card)) {
+            card.setStatus(CardStatus.ACTIVE);
+        } else {
+            card.setStatus(CardStatus.EXPIRED);
+        }
+        cardRepository.save(card);
+
+        return new BlockCardResponse("The card is successfully un-blocked");
+    }
+
+    private void checkCardPermission(Card card, Long userId, String action) {
+        User currentUser = getUserById(userId);
+
+        if (currentUser.getRole() != UserRole.ADMIN && !card.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException(
+                    "No permission to " + action + " this card. Card owner id: " +
+                            card.getUser().getId() + ", current user id: " + userId
+            );
+        }
+    }
+
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    }
+
+    private void validateCardForBlocking(Card card) {
+        if (!isCardNotExpired(card)) {
+            throw new IllegalStateException("Cannot block expired card with id: " + card.getId());
+        }
+
+        if (card.getIsBlocked()) {
+            throw new IllegalStateException("Card is already blocked with id: " + card.getId());
+        }
+    }
+
+    private void validateCardForUnblocking(Card card) {
+        if (!isCardNotExpired(card)) {
+            System.out.println("Warning: Unblocking expired card id: " + card.getId());
+        }
+
+        if (!card.getIsBlocked()) {
+            throw new IllegalStateException("Card is not blocked with id: " + card.getId());
+        }
+    }
+
+    private boolean isCardNotExpired(Card card) {
+        return card.getExpirationDate().isAfter(LocalDate.now()) ||
+                card.getExpirationDate().isEqual(LocalDate.now());
     }
 }

@@ -16,6 +16,7 @@ public class CardMapper {
         dto.setExpirationDate(card.getExpirationDate());
         dto.setStatus(card.getStatus());
         dto.setBalance(card.getBalance());
+        dto.setIsBlocked(card.getIsBlocked());
         return dto;
     }
 

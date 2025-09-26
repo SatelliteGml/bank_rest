@@ -7,5 +7,6 @@
 
     <include file="changes/01-initial-schema.xml" relativeToChangelogFile="true"/>
     <include file="changes/02-test-data.xml" relativeToChangelogFile="true"/>
+    <include file="changes/03-add-is-blocked-column.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

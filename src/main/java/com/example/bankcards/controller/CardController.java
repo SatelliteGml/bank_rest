@@ -1,9 +1,6 @@
 package com.example.bankcards.controller;
 
-import com.example.bankcards.dto.CardCreateRequest;
-import com.example.bankcards.dto.CardDto;
-import com.example.bankcards.dto.TransferRequest;
-import com.example.bankcards.dto.TransferResponse;
+import com.example.bankcards.dto.*;
 import com.example.bankcards.entity.enums.CardStatus;
 import com.example.bankcards.security.UserDetailsImpl;
 import com.example.bankcards.service.CardService;
@@ -101,8 +98,26 @@ public class CardController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{id}/block")
+    public ResponseEntity<BlockCardResponse> blockCard(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long id) {
+
+        BlockCardResponse response = cardService.blockCard(id, userDetails.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/unblock")
+    public ResponseEntity<BlockCardResponse> unblockCard(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long id) {
+
+        BlockCardResponse response = cardService.unblockCard(id, userDetails.getId());
+        return ResponseEntity.ok(response);
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     public ResponseEntity<Void> deleteCard(@PathVariable Long id) {
         cardService.deleteCard(id);
         return ResponseEntity.noContent().build();

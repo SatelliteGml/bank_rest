@@ -44,4 +44,7 @@ public class Card {
 
     @Column(name = "cvv", length = 255, nullable = false)
     private String cvv;
+
+    @Column(nullable = false, name = "is_blocked")
+    private Boolean isBlocked = false;
 }

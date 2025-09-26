@@ -1,5 +1,6 @@
 package com.example.bankcards.service;
 
+import com.example.bankcards.dto.BlockCardResponse;
 import com.example.bankcards.dto.CardCreateRequest;
 import com.example.bankcards.dto.CardDto;
 import com.example.bankcards.entity.enums.CardStatus;
@@ -18,4 +19,6 @@ public interface CardService {
     CardDto updateCardStatus(Long id, CardStatus status);
     void deleteCard(Long id);
     void checkExpiredCards();
+    BlockCardResponse blockCard(Long cardId, Long userId);
+    BlockCardResponse unblockCard(Long cardId, Long userId);
 }

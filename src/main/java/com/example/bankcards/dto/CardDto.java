@@ -20,4 +20,5 @@ public class CardDto {
     private LocalDate expirationDate;
     private CardStatus status;
     private BigDecimal balance;
+    private Boolean isBlocked;
 }
